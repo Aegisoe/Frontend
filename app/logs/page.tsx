@@ -164,7 +164,7 @@ export default function IncidentLog() {
       ) : mode === "simulate" && paginatedSimulated.length === 0 ? (
         <EmptyState title="No events found" description="No simulated incidents match this filter" />
       ) : mode === "onchain" && paginatedOnchain.length === 0 ? (
-        <EmptyState title="No events found" description={mode === "simulate" ? "No simulated incidents match this filter" : "No on-chain events match this filter"} />
+        <EmptyState title="No events found" description="No on-chain events match this filter" />
       ) : mode === "simulate" ? (
         <div className="overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--surface)]">
           <div className="flex items-center justify-between border-b border-[var(--border)] px-[17px] py-[13px]">
