@@ -1,15 +1,60 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 
 const API_BASE = "/api/backend";
 
-export interface ScanResult {
+export type ScanMode = "simulate" | "onchain";
+
+export interface RepoScanFinding {
+  file: string;
+  line: number;
+  secretType: string;
+  maskedValue: string;
+  entropy: number;
+  riskLevel: "CRITICAL" | "HIGH" | "MEDIUM" | string;
+  llmVerified: boolean;
+  llmReasoning: string;
+}
+
+export interface RepoScanSummary {
+  critical: number;
+  high: number;
+  medium: number;
+  total: number;
+  sensitiveFilesCount: number;
+}
+
+export interface RepoScanAutoFix {
   success: boolean;
-  mode: "scan" | "demo";
-  message: string;
+  prUrl?: string;
+  prNumber?: number;
+  branch?: string;
+  filesFixed?: number;
+  gitignoreUpdated?: boolean;
+}
+
+export interface ScanResult {
+  status: "completed" | "error";
   repo: string;
   branch: string;
+  mode: ScanMode;
+  scanDuration: number;
+  totalFilesScanned: number;
+  totalFilesInRepo: number;
+  findings: RepoScanFinding[];
+  sensitiveFiles: string[];
+  summary: RepoScanSummary;
+  autoFix?: RepoScanAutoFix;
+  error?: string;
+}
+
+interface ScanRequest {
+  repoUrl: string;
+  branch?: string;
+  mode: ScanMode;
+  autoFix: boolean;
+  maxFiles: number;
 }
 
 function extractRepo(url: string): string {
@@ -21,7 +66,6 @@ function extractRepo(url: string): string {
   return trimmed;
 }
 
-/** Fetch default branch from GitHub API (public repos, no auth needed) */
 async function fetchDefaultBranch(repo: string): Promise<string> {
   try {
     const res = await fetch(`https://api.github.com/repos/${repo}`, {
@@ -32,7 +76,7 @@ async function fetchDefaultBranch(repo: string): Promise<string> {
       if (typeof data.default_branch === "string") return data.default_branch;
     }
   } catch {
-    // GitHub API unreachable — fallback
+    // Ignore and use fallback branch.
   }
   return "main";
 }
@@ -41,93 +85,87 @@ export function useScanRepo() {
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [scanMode, setScanMode] = useState<"scan" | "demo" | null>(null);
-  const checkedRef = useRef(false);
-  const hasScanEndpoint = useRef(false);
 
-  const checkScanEndpoint = useCallback(async () => {
-    if (checkedRef.current) return hasScanEndpoint.current;
-    try {
-      const res = await fetch(`${API_BASE}/scan`, { method: "POST", body: "{}" });
-      // 404 = endpoint doesn't exist, anything else = it exists
-      hasScanEndpoint.current = res.status !== 404;
-    } catch {
-      hasScanEndpoint.current = false;
+  const scan = useCallback(async (request: ScanRequest) => {
+    const repo = extractRepo(request.repoUrl);
+    if (!repo) {
+      setError("Invalid GitHub URL");
+      return;
     }
-    checkedRef.current = true;
-    return hasScanEndpoint.current;
-  }, []);
 
-  const scan = useCallback(
-    async (repoUrl: string) => {
-      const repo = extractRepo(repoUrl);
-      if (!repo) {
-        setError("Invalid GitHub URL");
+    setIsScanning(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const branch = request.branch?.trim() || (await fetchDefaultBranch(repo));
+      const res = await fetch(`${API_BASE}/scan/repo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          repoUrl: request.repoUrl.trim(),
+          branch,
+          mode: request.mode,
+          autoFix: request.autoFix,
+          maxFiles: request.maxFiles,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || data?.status === "error") {
+        const message = String(data?.error || data?.message || `Scan failed: HTTP ${res.status}`);
+        setResult({
+          status: "error",
+          repo,
+          branch,
+          mode: request.mode,
+          scanDuration: 0,
+          totalFilesScanned: 0,
+          totalFilesInRepo: 0,
+          findings: [],
+          sensitiveFiles: [],
+          summary: {
+            critical: 0,
+            high: 0,
+            medium: 0,
+            total: 0,
+            sensitiveFilesCount: 0,
+          },
+          error: message,
+        });
         return;
       }
 
-      setIsScanning(true);
-      setError(null);
-      setResult(null);
+      const findings = Array.isArray(data?.findings) ? data.findings : [];
+      const sensitiveFiles = Array.isArray(data?.sensitiveFiles) ? data.sensitiveFiles : [];
+      const summary = data?.summary ?? {};
 
-      try {
-        // Auto-detect default branch (master vs main vs other)
-        const branch = await fetchDefaultBranch(repo);
-        const canScan = await checkScanEndpoint();
-
-        if (canScan) {
-          // Real scan endpoint available
-          setScanMode("scan");
-          const res = await fetch(`${API_BASE}/scan`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ repoUrl: repoUrl.trim(), repo, branch }),
-          });
-
-          if (!res.ok) throw new Error(`Scan failed: HTTP ${res.status}`);
-          const data = await res.json();
-
-          setResult({
-            success: true,
-            mode: "scan",
-            message: data.message ?? "Scan complete",
-            repo,
-            branch,
-          });
-        } else {
-          // Fallback to /demo/trigger
-          setScanMode("demo");
-          const res = await fetch(`${API_BASE}/demo/trigger`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              secretType: "generic",
-              secretValue: `scan-request-${Date.now()}`,
-              repo,
-              branch,
-              riskLevel: "HIGH",
-            }),
-          });
-
-          if (!res.ok) throw new Error(`Demo trigger failed: HTTP ${res.status}`);
-
-          setResult({
-            success: true,
-            mode: "demo",
-            message: `Incident created via demo trigger (branch: ${branch}). Check Dashboard for results.`,
-            repo,
-            branch,
-          });
-        }
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Scan failed";
-        setError(msg);
-      } finally {
-        setIsScanning(false);
-      }
-    },
-    [checkScanEndpoint]
-  );
+      setResult({
+        status: "completed",
+        repo: String(data?.repo || repo),
+        branch: String(data?.branch || branch),
+        mode: request.mode,
+        scanDuration: Number(data?.scanDuration || 0),
+        totalFilesScanned: Number(data?.totalFilesScanned || 0),
+        totalFilesInRepo: Number(data?.totalFilesInRepo || 0),
+        findings: findings as RepoScanFinding[],
+        sensitiveFiles,
+        summary: {
+          critical: Number(summary.critical || 0),
+          high: Number(summary.high || 0),
+          medium: Number(summary.medium || 0),
+          total: Number(summary.total || findings.length),
+          sensitiveFilesCount: Number(summary.sensitiveFilesCount || sensitiveFiles.length),
+        },
+        autoFix: data?.autoFix as RepoScanAutoFix | undefined,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Scan failed";
+      setError(msg);
+    } finally {
+      setIsScanning(false);
+    }
+  }, []);
 
   const reset = useCallback(() => {
     setResult(null);
@@ -135,5 +173,5 @@ export function useScanRepo() {
     setIsScanning(false);
   }, []);
 
-  return { scan, isScanning, result, error, scanMode, reset };
+  return { scan, isScanning, result, error, reset };
 }

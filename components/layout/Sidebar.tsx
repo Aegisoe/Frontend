@@ -11,7 +11,7 @@ import { useDataMode } from "@/components/providers/DataModeProvider";
 
 const NAV_PAGES = [
   { href: "/dashboard", label: "Dashboard", icon: "\u25A6" },
-  { href: "/scan", label: "Repo Scanner", icon: "\u2299" },
+  { href: "/scanner", label: "Repo Scanner", icon: "\u25CE" },
   { href: "/proof", label: "Proof Verifier", icon: "\u25CE" },
   { href: "/logs", label: "Incident Log", icon: "\u2261" },
 ] as const;
