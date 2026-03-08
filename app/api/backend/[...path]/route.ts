@@ -10,8 +10,17 @@ async function tryFetch(url: string, init?: RequestInit) {
     headers: { "Content-Type": "application/json", ...init?.headers },
     next: { revalidate: 0 },
   });
-  const data = await res.json();
-  return NextResponse.json(data, { status: res.status });
+  const text = await res.text();
+  try {
+    const data = JSON.parse(text);
+    return NextResponse.json(data, { status: res.status });
+  } catch {
+    // Non-JSON response — wrap raw text
+    return NextResponse.json(
+      { error: text || "Non-JSON response", raw: true },
+      { status: res.status }
+    );
+  }
 }
 
 export async function GET(

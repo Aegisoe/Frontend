@@ -118,19 +118,26 @@ export function ScanForm() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
               >
+                Detecting default branch via GitHub API...
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+              >
                 Layer 1: Regex pattern matching...
               </motion.div>
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.0 }}
+                transition={{ delay: 1.4 }}
               >
                 Layer 2: Shannon entropy analysis...
               </motion.div>
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.8 }}
+                transition={{ delay: 2.0 }}
               >
                 Layer 3: LLM risk classification...
               </motion.div>
@@ -178,11 +185,19 @@ export function ScanForm() {
               />
             </div>
 
-            <div className="mb-3 rounded-[6px] border border-[var(--border)] bg-[var(--bg)] p-3">
-              <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text4)]">
-                Repository
+            <div className="mb-3 grid grid-cols-2 gap-2">
+              <div className="rounded-[6px] border border-[var(--border)] bg-[var(--bg)] p-3">
+                <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text4)]">
+                  Repository
+                </div>
+                <div className="font-mono text-[12px] text-[var(--text)]">{result.repo}</div>
               </div>
-              <div className="font-mono text-[12px] text-[var(--text)]">{result.repo}</div>
+              <div className="rounded-[6px] border border-[var(--border)] bg-[var(--bg)] p-3">
+                <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text4)]">
+                  Branch (auto-detected)
+                </div>
+                <div className="font-mono text-[12px] text-[var(--text)]">{result.branch}</div>
+              </div>
             </div>
 
             <p className="mb-4 font-mono text-[11px] text-[var(--text3)]">{result.message}</p>

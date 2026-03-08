@@ -9,6 +9,7 @@ export interface ScanResult {
   mode: "scan" | "demo";
   message: string;
   repo: string;
+  branch: string;
 }
 
 function extractRepo(url: string): string {
@@ -18,6 +19,22 @@ function extractRepo(url: string): string {
   );
   if (match) return match[1];
   return trimmed;
+}
+
+/** Fetch default branch from GitHub API (public repos, no auth needed) */
+async function fetchDefaultBranch(repo: string): Promise<string> {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${repo}`, {
+      headers: { Accept: "application/vnd.github.v3+json" },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (typeof data.default_branch === "string") return data.default_branch;
+    }
+  } catch {
+    // GitHub API unreachable — fallback
+  }
+  return "main";
 }
 
 export function useScanRepo() {
@@ -54,6 +71,8 @@ export function useScanRepo() {
       setResult(null);
 
       try {
+        // Auto-detect default branch (master vs main vs other)
+        const branch = await fetchDefaultBranch(repo);
         const canScan = await checkScanEndpoint();
 
         if (canScan) {
@@ -62,7 +81,7 @@ export function useScanRepo() {
           const res = await fetch(`${API_BASE}/scan`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ repoUrl: repoUrl.trim(), repo }),
+            body: JSON.stringify({ repoUrl: repoUrl.trim(), repo, branch }),
           });
 
           if (!res.ok) throw new Error(`Scan failed: HTTP ${res.status}`);
@@ -73,6 +92,7 @@ export function useScanRepo() {
             mode: "scan",
             message: data.message ?? "Scan complete",
             repo,
+            branch,
           });
         } else {
           // Fallback to /demo/trigger
@@ -84,6 +104,7 @@ export function useScanRepo() {
               secretType: "generic",
               secretValue: `scan-request-${Date.now()}`,
               repo,
+              branch,
               riskLevel: "HIGH",
             }),
           });
@@ -93,8 +114,9 @@ export function useScanRepo() {
           setResult({
             success: true,
             mode: "demo",
-            message: "Incident created via demo trigger. Check Dashboard for results.",
+            message: `Incident created via demo trigger (branch: ${branch}). Check Dashboard for results.`,
             repo,
+            branch,
           });
         }
       } catch (err: unknown) {
