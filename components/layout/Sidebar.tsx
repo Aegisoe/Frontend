@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { CONTRACT_ADDRESS, CRE_OPERATOR_ADDRESS, ETHERSCAN_BASE } from "@/config/constants";
 import { truncateAddress } from "@/lib/format";
+import { DataModeSwitch } from "@/components/ui/DataModeSwitch";
+import { useDataMode } from "@/components/providers/DataModeProvider";
 
 const NAV_PAGES = [
   { href: "/", label: "Dashboard", icon: "\u25A6" },
@@ -21,6 +23,7 @@ const NAV_EXTERNAL = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { mode } = useDataMode();
 
   return (
     <aside className="fixed inset-y-0 left-0 z-50 flex w-[228px] flex-col border-r border-[var(--border)] bg-[var(--surface)]">
@@ -96,9 +99,12 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="border-t border-[var(--border)] px-3.5 py-3">
+        <div className="mb-2.5">
+          <DataModeSwitch compact />
+        </div>
         <div className="mb-2 flex items-center gap-[7px] rounded-[7px] border border-[var(--border)] bg-[var(--surface2)] px-2.5 py-[7px] font-mono text-[11px] text-[var(--text2)]">
           <div className="dot-pulse h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--green)]" />
-          Sepolia Testnet
+          {mode === "simulate" ? "Simulation Mode" : "Sepolia Testnet"}
         </div>
         <div className="font-mono text-[10px] leading-[1.7] text-[var(--text3)]">
           Contract<br />

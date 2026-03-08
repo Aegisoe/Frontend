@@ -4,18 +4,27 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { StatsGrid } from "@/components/dashboard/StatsGrid";
 import { RecentIncidents } from "@/components/dashboard/RecentIncidents";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
+import { SimulationActivityFeed } from "@/components/dashboard/SimulationActivityFeed";
 import { useBackendIncidents, useBackendHealth } from "@/hooks/useBackendApi";
 import { useContractEvents } from "@/hooks/useContractEvents";
+import { useDataMode } from "@/components/providers/DataModeProvider";
+import { DataModeSwitch } from "@/components/ui/DataModeSwitch";
 
 export default function Dashboard() {
   const { data: backendData } = useBackendIncidents();
   const { events } = useContractEvents();
   const health = useBackendHealth();
+  const { mode } = useDataMode();
 
   const incidents = backendData?.incidents ?? [];
 
-  const totalIncidents = events.filter((e) => e.type === "incident").length;
-  const totalRotations = events.filter((e) => e.type === "rotation").length;
+  const onchainIncidentCount = events.filter((e) => e.type === "incident").length;
+  const onchainRotationCount = events.filter((e) => e.type === "rotation").length;
+  const simulatedIncidentCount = incidents.length;
+  const simulatedRotationCount = incidents.filter((i) => i.status === "rotated").length;
+
+  const totalIncidents = mode === "simulate" ? simulatedIncidentCount : onchainIncidentCount;
+  const totalRotations = mode === "simulate" ? simulatedRotationCount : onchainRotationCount;
   const pendingCount = incidents.filter((i) => i.status === "detected" || i.status === "rotating").length;
 
   // Build backend status note
@@ -29,7 +38,9 @@ export default function Dashboard() {
     {
       label: "Total Incidents",
       value: totalIncidents,
-      note: totalIncidents > 0 ? `${totalIncidents} on-chain` : "No incidents yet",
+      note: totalIncidents > 0
+        ? mode === "simulate" ? `${totalIncidents} simulated` : `${totalIncidents} on-chain`
+        : "No incidents yet",
       noteType: totalIncidents > 0 ? "warn" as const : "normal" as const,
       icon: "\u26A0",
       iconBg: "bg-[var(--orange-dim)]",
@@ -67,9 +78,10 @@ export default function Dashboard() {
   return (
     <PageContainer
       title="Dashboard"
-      description="Real-time overview &middot; Chainlink CRE + Sepolia"
+      description={`Real-time overview · ${mode === "simulate" ? "CRE Simulation" : "On-chain (Sepolia)"}`}
       actions={
         <>
+          <DataModeSwitch />
           <button
             onClick={() => window.location.reload()}
             className="inline-flex items-center gap-1.5 rounded-[7px] border border-[var(--border)] bg-transparent px-3.5 py-[7px] text-[13px] font-medium text-[var(--text2)] transition-all duration-100 hover:border-[var(--border2)] hover:bg-[var(--surface2)] hover:text-[var(--text)]"
@@ -83,7 +95,11 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <RecentIncidents incidents={incidents} />
-        <ActivityFeed events={events} />
+        {mode === "simulate" ? (
+          <SimulationActivityFeed incidents={incidents} />
+        ) : (
+          <ActivityFeed events={events} />
+        )}
       </div>
     </PageContainer>
   );

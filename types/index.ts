@@ -30,6 +30,10 @@ export interface BackendIncident {
   riskLevel?: string;
   detectedAt: string;
   creTriggered: boolean;
+  secretId?: `0x${string}`;
+  incidentCommitment?: `0x${string}`;
+  newCommitment?: `0x${string}`;
+  processedAt?: string;
 }
 
 export interface BackendResponse {
