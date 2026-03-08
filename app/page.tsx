@@ -20,7 +20,9 @@ export default function Dashboard() {
 
   // Build backend status note
   const backendNote = health.isOnline
-    ? `CRE: ${health.creMode} \u00B7 Chain: ${health.onChain ? "active" : "off"}`
+    ? health.creMode !== "unknown"
+      ? `CRE: ${health.creMode} \u00B7 Chain: ${health.onChain ? "active" : "off"}`
+      : health.service || "Connected"
     : "Unreachable";
 
   const stats = [
