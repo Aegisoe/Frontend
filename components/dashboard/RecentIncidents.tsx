@@ -11,49 +11,64 @@ interface RecentIncidentsProps {
 export function RecentIncidents({ incidents }: RecentIncidentsProps) {
   if (incidents.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-[var(--border)] py-8 text-center">
-        <p className="text-sm text-[var(--muted-foreground)]">No incidents detected yet</p>
-        <p className="mt-1 text-xs text-[var(--muted)]">Waiting for webhook triggers...</p>
+      <div className="overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--surface)]">
+        <div className="flex items-center justify-between border-b border-[var(--border)] px-[17px] py-[13px]">
+          <div className="flex items-center gap-[7px] text-[13px] font-semibold">
+            <span className="text-[var(--orange)]">&#9679;</span> Recent Incidents
+          </div>
+          <span className="font-mono text-[11px] text-[var(--text3)]">from backend API</span>
+        </div>
+        <div className="flex flex-col items-center justify-center py-12">
+          <p className="text-sm font-medium text-[var(--text2)]">No incidents detected yet</p>
+          <p className="mt-1 text-xs text-[var(--text3)]">Waiting for webhook triggers...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--card)]">
-      <div className="border-b border-[var(--border)] px-4 py-3">
-        <h3 className="text-sm font-medium text-[var(--foreground)]">Recent Incidents</h3>
+    <div className="overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--surface)]">
+      <div className="flex items-center justify-between border-b border-[var(--border)] px-[17px] py-[13px]">
+        <div className="flex items-center gap-[7px] text-[13px] font-semibold">
+          <span className="text-[var(--orange)]">&#9679;</span> Recent Incidents
+        </div>
+        <span className="font-mono text-[11px] text-[var(--text3)]">from backend API</span>
       </div>
-      <div className="divide-y divide-[var(--border)]">
-        {incidents.slice(0, 5).map((incident, index) => (
-          <motion.div
-            key={incident.id}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.2, delay: index * 0.05 }}
-            className="flex items-center justify-between px-4 py-3"
-          >
-            <div className="flex items-center gap-3">
-              <span className={`h-2 w-2 rounded-full ${
-                incident.status === "rotated" ? "bg-[var(--success)]" :
-                incident.status === "rotating" ? "bg-[var(--accent)]" :
-                incident.status === "skipped" ? "bg-[var(--muted)]" :
-                "bg-[var(--critical)]"
-              }`} />
-              <div>
-                <p className="font-mono text-sm text-[var(--foreground)]">{incident.repo}</p>
-                <p className="text-xs text-[var(--muted)]">
-                  {incident.secretType} &middot; {new Date(incident.detectedAt).toLocaleString()}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {incident.riskLevel && (
-                <Badge label={incident.riskLevel} variant="risk" />
-              )}
-              <Badge label={incident.status} variant="status" />
-            </div>
-          </motion.div>
-        ))}
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr>
+              <th className="border-b border-[var(--border)] bg-[var(--surface2)] px-[15px] py-[9px] text-left font-mono text-[10px] font-medium uppercase tracking-[0.07em] text-[var(--text3)] whitespace-nowrap">Repo</th>
+              <th className="border-b border-[var(--border)] bg-[var(--surface2)] px-[15px] py-[9px] text-left font-mono text-[10px] font-medium uppercase tracking-[0.07em] text-[var(--text3)] whitespace-nowrap">Type</th>
+              <th className="border-b border-[var(--border)] bg-[var(--surface2)] px-[15px] py-[9px] text-left font-mono text-[10px] font-medium uppercase tracking-[0.07em] text-[var(--text3)] whitespace-nowrap">Risk</th>
+              <th className="border-b border-[var(--border)] bg-[var(--surface2)] px-[15px] py-[9px] text-left font-mono text-[10px] font-medium uppercase tracking-[0.07em] text-[var(--text3)] whitespace-nowrap">Status</th>
+              <th className="border-b border-[var(--border)] bg-[var(--surface2)] px-[15px] py-[9px] text-left font-mono text-[10px] font-medium uppercase tracking-[0.07em] text-[var(--text3)] whitespace-nowrap">Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {incidents.slice(0, 5).map((incident, index) => (
+              <motion.tr
+                key={incident.id}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.15, delay: index * 0.04 }}
+                className="transition-colors hover:bg-white/[0.01]"
+              >
+                <td className="border-b border-[var(--border)] px-[15px] py-[11px] text-[13px] font-medium">{incident.repo}</td>
+                <td className="border-b border-[var(--border)] px-[15px] py-[11px] font-mono text-[13px] text-[var(--text2)]">{incident.secretType}</td>
+                <td className="border-b border-[var(--border)] px-[15px] py-[11px]">
+                  {incident.riskLevel && <Badge label={incident.riskLevel} variant="risk" />}
+                </td>
+                <td className="border-b border-[var(--border)] px-[15px] py-[11px]">
+                  <Badge label={incident.status} variant="status" />
+                </td>
+                <td className="border-b border-[var(--border)] px-[15px] py-[11px] font-mono text-[13px] text-[var(--text3)]">
+                  {new Date(incident.detectedAt).toLocaleString()}
+                </td>
+              </motion.tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

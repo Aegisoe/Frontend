@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BACKEND_URL } from "@/config/constants";
 import type { BackendResponse } from "@/types";
+
+// Use Next.js API proxy to avoid CORS issues
+const API_BASE = "/api/backend";
 
 export function useBackendIncidents() {
   const [data, setData] = useState<BackendResponse | null>(null);
@@ -13,7 +15,7 @@ export function useBackendIncidents() {
     async function fetchIncidents() {
       setIsLoading(true);
       try {
-        const res = await fetch(`${BACKEND_URL}/incidents`);
+        const res = await fetch(`${API_BASE}/incidents`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         setData(json);
@@ -34,16 +36,32 @@ export function useBackendIncidents() {
   return { data, isLoading, error };
 }
 
-export function useBackendHealth() {
-  const [isOnline, setIsOnline] = useState<boolean | null>(null);
+export interface HealthStatus {
+  isOnline: boolean | null;
+  service: string;
+}
+
+export function useBackendHealth(): HealthStatus {
+  const [status, setStatus] = useState<HealthStatus>({
+    isOnline: null,
+    service: "",
+  });
 
   useEffect(() => {
     async function check() {
       try {
-        const res = await fetch(`${BACKEND_URL}/health`);
-        setIsOnline(res.ok);
+        const res = await fetch(`${API_BASE}/health`);
+        if (!res.ok) {
+          setStatus({ isOnline: false, service: "" });
+          return;
+        }
+        const data = await res.json();
+        setStatus({
+          isOnline: data.status === "ok",
+          service: data.service ?? "AEGISOE Backend",
+        });
       } catch {
-        setIsOnline(false);
+        setStatus({ isOnline: false, service: "" });
       }
     }
 
@@ -52,5 +70,5 @@ export function useBackendHealth() {
     return () => clearInterval(interval);
   }, []);
 
-  return isOnline;
+  return status;
 }

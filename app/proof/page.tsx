@@ -30,7 +30,13 @@ export default function ProofVerifier() {
     }
   }, [inputValue, isValid]);
 
-  // All hooks — only fire when activeSecretId is set
+  const handleClear = useCallback(() => {
+    setInputValue("");
+    setActiveSecretId(undefined);
+    setIncidentPage(1);
+    setRotationPage(1);
+  }, []);
+
   const { data: incidentData, isLoading: incidentsLoading } = useIncidents(activeSecretId, incidentPage);
   const { data: rotationData, isLoading: rotationsLoading } = useRotations(activeSecretId, rotationPage);
   const { incidentCount, rotationCount, isLatestRotated, isLoading: countsLoading } = useIncidentCount(activeSecretId);
@@ -45,12 +51,13 @@ export default function ProofVerifier() {
   return (
     <PageContainer
       title="Proof Verifier"
-      description="Query on-chain incident and rotation history by secretId"
+      description="Query on-chain incident + rotation history by secretId (bytes32)"
     >
       <SecretIdInput
         value={inputValue}
         onChange={setInputValue}
         onSubmit={handleSubmit}
+        onClear={handleClear}
         isValid={isValid || inputValue.length === 0}
       />
 

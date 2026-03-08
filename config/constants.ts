@@ -10,6 +10,9 @@ export const PAGE_SIZE = 10;
 
 export const ETHERSCAN_BASE = "https://sepolia.etherscan.io";
 
+// Block saat contract pertama kali deployed — hindari query dari block 0
+export const DEPLOYMENT_BLOCK = BigInt(7_800_000);
+
 export const RISK_LABELS = ["NONE", "MEDIUM", "HIGH", "CRITICAL"] as const;
 
 export const RISK_COLORS: Record<string, string> = {

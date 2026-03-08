@@ -1,32 +1,40 @@
 "use client";
 
-import { RISK_COLORS, RISK_BG_COLORS } from "@/config/constants";
+type BadgeVariant = "risk" | "status" | "event" | "default";
 
 interface BadgeProps {
   label: string;
-  variant?: "risk" | "status" | "default";
+  variant?: BadgeVariant;
+}
+
+const BASE = "inline-flex items-center gap-[3px] rounded-[4px] border px-2 py-[2px] font-mono text-[10px] font-semibold uppercase tracking-[0.05em] whitespace-nowrap";
+
+function getClasses(label: string, variant: BadgeVariant): string {
+  const l = label.toLowerCase();
+
+  if (variant === "risk") {
+    if (l === "critical") return `${BASE} border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.1)] text-[var(--red)]`;
+    if (l === "high") return `${BASE} border-[rgba(249,115,22,0.2)] bg-[rgba(249,115,22,0.1)] text-[var(--orange)]`;
+    if (l === "medium") return `${BASE} border-[rgba(245,158,11,0.2)] bg-[rgba(245,158,11,0.1)] text-[var(--amber)]`;
+    if (l === "low" || l === "none") return `${BASE} border-[rgba(34,197,94,0.2)] bg-[rgba(34,197,94,0.1)] text-[var(--green)]`;
+    return `${BASE} border-[var(--border)] bg-[rgba(82,82,91,0.12)] text-[var(--text3)]`;
+  }
+
+  if (variant === "status") {
+    if (l === "rotated" || l === "confirmed") return `${BASE} border-[rgba(34,197,94,0.2)] bg-[rgba(34,197,94,0.1)] text-[var(--green)]`;
+    if (l === "pending" || l === "rotating" || l === "detected") return `${BASE} border-[rgba(249,115,22,0.2)] bg-[rgba(249,115,22,0.1)] text-[var(--orange)]`;
+    return `${BASE} border-[var(--border)] bg-[rgba(82,82,91,0.12)] text-[var(--text3)]`;
+  }
+
+  if (variant === "event") {
+    if (l === "incident" || l === "incidentrecorded") return `${BASE} border-[rgba(239,68,68,0.15)] bg-[rgba(239,68,68,0.07)] text-[var(--red)]`;
+    if (l === "rotation" || l === "secretrotated") return `${BASE} border-[rgba(34,197,94,0.15)] bg-[rgba(34,197,94,0.07)] text-[var(--green)]`;
+    return `${BASE} border-[var(--border)] bg-[rgba(82,82,91,0.12)] text-[var(--text3)]`;
+  }
+
+  return `${BASE} border-[var(--border)] bg-[rgba(82,82,91,0.12)] text-[var(--text3)]`;
 }
 
 export function Badge({ label, variant = "default" }: BadgeProps) {
-  let classes = "inline-flex items-center rounded-md px-2 py-0.5 font-mono text-xs font-medium";
-
-  if (variant === "risk") {
-    const colorClass = RISK_COLORS[label] || "text-[var(--muted-foreground)]";
-    const bgClass = RISK_BG_COLORS[label] || "bg-[var(--card)]";
-    classes += ` ${colorClass} ${bgClass}`;
-  } else if (variant === "status") {
-    if (label === "rotated") {
-      classes += " text-[var(--success)] bg-[var(--success)]/10";
-    } else if (label === "pending") {
-      classes += " text-[var(--medium)] bg-[var(--medium)]/10";
-    } else if (label === "rotating") {
-      classes += " text-[var(--accent)] bg-[var(--accent)]/10";
-    } else {
-      classes += " text-[var(--muted-foreground)] bg-[var(--card)]";
-    }
-  } else {
-    classes += " text-[var(--muted-foreground)] bg-[var(--card)]";
-  }
-
-  return <span className={classes}>{label}</span>;
+  return <span className={getClasses(label, variant)}>{label}</span>;
 }

@@ -8,9 +8,9 @@ import { useBackendIncidents, useBackendHealth } from "@/hooks/useBackendApi";
 import { useContractEvents } from "@/hooks/useContractEvents";
 
 export default function Dashboard() {
-  const { data: backendData, isLoading: beLoading } = useBackendIncidents();
-  const { events, isLoading: eventsLoading } = useContractEvents();
-  const isOnline = useBackendHealth();
+  const { data: backendData } = useBackendIncidents();
+  const { events } = useContractEvents();
+  const health = useBackendHealth();
 
   const incidents = backendData?.incidents ?? [];
 
@@ -22,33 +22,52 @@ export default function Dashboard() {
     {
       label: "Total Incidents",
       value: totalIncidents,
-      subtitle: "On-chain records",
-      color: "text-[var(--critical)]",
+      note: totalIncidents > 0 ? `${totalIncidents} on-chain` : "No incidents yet",
+      noteType: totalIncidents > 0 ? "warn" as const : "normal" as const,
+      icon: "\u26A0",
+      iconBg: "bg-[var(--orange-dim)]",
     },
     {
-      label: "Total Rotations",
+      label: "Rotations Done",
       value: totalRotations,
-      subtitle: "Keys rotated",
-      color: "text-[var(--success)]",
+      note: totalRotations > 0 ? `${totalRotations} confirmed` : "No rotations yet",
+      noteType: totalRotations > 0 ? "up" as const : "normal" as const,
+      icon: "\u2713",
+      iconBg: "bg-[rgba(34,197,94,0.1)]",
     },
     {
-      label: "Pending",
+      label: "Pending Rotation",
       value: pendingCount,
-      subtitle: "Awaiting rotation",
-      color: pendingCount > 0 ? "text-[var(--medium)]" : "text-[var(--foreground)]",
+      note: pendingCount > 0 ? "Awaiting rotation" : "All clear",
+      noteType: pendingCount > 0 ? "warn" as const : "up" as const,
+      icon: "!",
+      iconBg: "bg-[rgba(239,68,68,0.1)]",
+      valueStyle: pendingCount > 0 ? "text-[var(--red)]" : undefined,
     },
     {
-      label: "Backend",
-      value: isOnline === null ? "..." : isOnline ? "Online" : "Offline",
-      subtitle: isOnline ? "Railway" : "Unreachable",
-      color: isOnline ? "text-[var(--success)]" : "text-[var(--critical)]",
+      label: "Backend Status",
+      value: health.isOnline === null ? "..." : health.isOnline ? "ONLINE" : "OFFLINE",
+      note: health.isOnline ? "Railway" : "Unreachable",
+      noteType: "normal" as const,
+      icon: "\u2B21",
+      iconBg: "bg-[rgba(59,130,246,0.1)]",
+      valueStyle: health.isOnline
+        ? "text-[var(--green)] !text-lg mt-1"
+        : "text-[var(--red)] !text-lg mt-1",
     },
   ];
 
   return (
     <PageContainer
       title="Dashboard"
-      description="AEGISOE incident monitoring and on-chain proof overview"
+      description="Real-time overview &middot; Chainlink CRE + Sepolia"
+      actions={
+        <>
+          <button className="inline-flex items-center gap-1.5 rounded-[7px] border border-[var(--border)] bg-transparent px-3.5 py-[7px] text-[13px] font-medium text-[var(--text2)] transition-all duration-100 hover:border-[var(--border2)] hover:bg-[var(--surface2)] hover:text-[var(--text)]">
+            &#8634; Refresh
+          </button>
+        </>
+      }
     >
       <StatsGrid stats={stats} />
 

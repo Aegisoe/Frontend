@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AEGISOE — Confidential Security Automation",
   description: "Verifiable on-chain incident response for leaked secrets",
+  icons: {
+    icon: "/Logo_Aegisoe.svg",
+  },
 };
 
 export default function RootLayout({
@@ -31,7 +34,7 @@ export default function RootLayout({
       >
         <Web3Provider>
           <Sidebar />
-          <main className="ml-56 min-h-screen p-6">
+          <main className="ml-[228px] flex min-h-screen flex-col">
             {children}
           </main>
         </Web3Provider>

@@ -14,6 +14,9 @@ const ROTATION_EVENT = parseAbiItem(
   "event SecretRotated(bytes32 indexed secretId, address indexed operator, bytes32 oldCommitment, bytes32 newCommitment, uint48 timestamp)"
 );
 
+// Thirdweb public RPC limits getLogs to 1,000 blocks per query
+const MAX_BLOCK_RANGE = BigInt(900);
+
 export function useContractEvents(fromBlock?: bigint) {
   const publicClient = usePublicClient();
   const [events, setEvents] = useState<ContractEvent[]>([]);
@@ -25,7 +28,14 @@ export function useContractEvents(fromBlock?: bigint) {
     async function fetchEvents() {
       setIsLoading(true);
       try {
-        const startBlock = fromBlock ?? BigInt(0);
+        const currentBlock = await publicClient!.getBlockNumber();
+
+        // If a custom fromBlock is provided, use it; otherwise query last MAX_BLOCK_RANGE blocks
+        const startBlock = fromBlock
+          ? fromBlock
+          : currentBlock > MAX_BLOCK_RANGE
+            ? currentBlock - MAX_BLOCK_RANGE
+            : BigInt(0);
 
         const [incidentLogs, rotationLogs] = await Promise.all([
           publicClient!.getLogs({
