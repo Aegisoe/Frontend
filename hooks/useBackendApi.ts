@@ -35,9 +35,7 @@ function normalizeIncident(raw: Record<string, unknown>, idx: number): BackendIn
   return {
     id:
       (typeof raw.id === "string" && raw.id) ||
-      (typeof raw.secretId === "string" && raw.secretId) ||
-      (typeof raw.commitSha === "string" && raw.commitSha) ||
-      `incident-${idx}`,
+      `${typeof raw.secretId === "string" ? raw.secretId : typeof raw.commitSha === "string" ? raw.commitSha : "incident"}-${idx}`,
     repo: (typeof raw.repo === "string" && raw.repo) || (typeof raw.repository === "string" && raw.repository) || "unknown/repo",
     commitSha: (typeof raw.commitSha === "string" && raw.commitSha) || "",
     secretType: (typeof raw.secretType === "string" && raw.secretType) || "generic",
