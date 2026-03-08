@@ -2,7 +2,25 @@
 
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/Badge";
+import { RISK_LABELS } from "@/config/constants";
 import type { BackendIncident } from "@/types";
+
+function resolveRisk(val: string | number | undefined): string {
+  if (val == null) return "UNKNOWN";
+  if (typeof val === "number") return RISK_LABELS[val] ?? "UNKNOWN";
+  return String(val);
+}
+
+function resolveStatus(val: string | undefined): string {
+  return val ?? "pending";
+}
+
+function resolveDate(val: string | undefined): string {
+  if (!val) return "-";
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return "-";
+  return d.toLocaleString();
+}
 
 interface RecentIncidentsProps {
   incidents: BackendIncident[];
@@ -48,7 +66,7 @@ export function RecentIncidents({ incidents }: RecentIncidentsProps) {
           <tbody>
             {incidents.slice(0, 5).map((incident, index) => (
               <motion.tr
-                key={incident.id}
+                key={incident.id ?? `incident-${index}`}
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.15, delay: index * 0.04 }}
@@ -57,13 +75,13 @@ export function RecentIncidents({ incidents }: RecentIncidentsProps) {
                 <td className="border-b border-[var(--border)] px-[15px] py-[11px] text-[13px] font-medium">{incident.repo}</td>
                 <td className="border-b border-[var(--border)] px-[15px] py-[11px] font-mono text-[13px] text-[var(--text2)]">{incident.secretType}</td>
                 <td className="border-b border-[var(--border)] px-[15px] py-[11px]">
-                  {incident.riskLevel && <Badge label={incident.riskLevel} variant="risk" />}
+                  <Badge label={resolveRisk(incident.riskLevel)} variant="risk" />
                 </td>
                 <td className="border-b border-[var(--border)] px-[15px] py-[11px]">
-                  <Badge label={incident.status} variant="status" />
+                  <Badge label={resolveStatus(incident.status)} variant="status" />
                 </td>
                 <td className="border-b border-[var(--border)] px-[15px] py-[11px] font-mono text-[13px] text-[var(--text3)]">
-                  {new Date(incident.detectedAt).toLocaleString()}
+                  {resolveDate(incident.detectedAt)}
                 </td>
               </motion.tr>
             ))}

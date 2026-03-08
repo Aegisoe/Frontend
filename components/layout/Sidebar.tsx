@@ -33,6 +33,7 @@ export function Sidebar() {
             width={30}
             height={30}
             className="flex-shrink-0"
+            style={{ width: 30, height: 30 }}
             priority
           />
           <span className="font-mono text-sm font-bold tracking-[0.1em] text-[var(--text)]">

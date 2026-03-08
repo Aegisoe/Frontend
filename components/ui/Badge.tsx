@@ -10,7 +10,7 @@ interface BadgeProps {
 const BASE = "inline-flex items-center gap-[3px] rounded-[4px] border px-2 py-[2px] font-mono text-[10px] font-semibold uppercase tracking-[0.05em] whitespace-nowrap";
 
 function getClasses(label: string, variant: BadgeVariant): string {
-  const l = label.toLowerCase();
+  const l = String(label).toLowerCase();
 
   if (variant === "risk") {
     if (l === "critical") return `${BASE} border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.1)] text-[var(--red)]`;
@@ -36,5 +36,5 @@ function getClasses(label: string, variant: BadgeVariant): string {
 }
 
 export function Badge({ label, variant = "default" }: BadgeProps) {
-  return <span className={getClasses(label, variant)}>{label}</span>;
+  return <span className={getClasses(label, variant)}>{String(label)}</span>;
 }

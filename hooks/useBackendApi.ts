@@ -61,7 +61,7 @@ export function useBackendHealth(): HealthStatus {
         }
         const data = await res.json();
         setStatus({
-          isOnline: data.status === "ok",
+          isOnline: data.status === "ok" || data.ok === true,
           service: data.service ?? "AEGISOE Backend",
           onChain: data.onChain ?? false,
           creMode: data.creMode ?? "unknown",
