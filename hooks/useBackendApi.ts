@@ -6,11 +6,13 @@ import type { BackendIncident, BackendResponse } from "@/types";
 // Use Next.js API proxy to avoid CORS issues
 const API_BASE = "/api/backend";
 
-function normalizeStatus(value: unknown): BackendIncident["status"] {
+function normalizeStatus(value: unknown, raw: Record<string, unknown>): BackendIncident["status"] {
   if (typeof value === "string") {
     const v = value.toLowerCase();
     if (v === "detected" || v === "rotating" || v === "rotated" || v === "skipped") return v;
   }
+  if (raw.rotated === true) return "rotated";
+  if (raw.rotated === false) return "detected";
   return "detected";
 }
 
@@ -39,7 +41,7 @@ function normalizeIncident(raw: Record<string, unknown>, idx: number): BackendIn
     repo: (typeof raw.repo === "string" && raw.repo) || (typeof raw.repository === "string" && raw.repository) || "unknown/repo",
     commitSha: (typeof raw.commitSha === "string" && raw.commitSha) || "",
     secretType: (typeof raw.secretType === "string" && raw.secretType) || "generic",
-    status: normalizeStatus(raw.status),
+    status: normalizeStatus(raw.status, raw),
     riskLevel: normalizeRisk(raw.riskLevel),
     detectedAt,
     creTriggered: typeof raw.creTriggered === "boolean" ? raw.creTriggered : true,
