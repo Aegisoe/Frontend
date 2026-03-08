@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Web3Provider } from "@/components/providers/Web3Provider";
-import { Sidebar } from "@/components/layout/Sidebar";
 import { DataModeProvider } from "@/components/providers/DataModeProvider";
 
 const geistSans = Geist({
@@ -35,10 +34,7 @@ export default function RootLayout({
       >
         <Web3Provider>
           <DataModeProvider>
-            <Sidebar />
-            <main className="ml-[228px] flex min-h-screen flex-col">
-              {children}
-            </main>
+            {children}
           </DataModeProvider>
         </Web3Provider>
       </body>

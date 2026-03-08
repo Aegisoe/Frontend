@@ -10,7 +10,7 @@ import { DataModeSwitch } from "@/components/ui/DataModeSwitch";
 import { useDataMode } from "@/components/providers/DataModeProvider";
 
 const NAV_PAGES = [
-  { href: "/", label: "Dashboard", icon: "\u25A6" },
+  { href: "/dashboard", label: "Dashboard", icon: "\u25A6" },
   { href: "/proof", label: "Proof Verifier", icon: "\u25CE" },
   { href: "/logs", label: "Incident Log", icon: "\u2261" },
 ] as const;
