@@ -39,12 +39,16 @@ export function useBackendIncidents() {
 export interface HealthStatus {
   isOnline: boolean | null;
   service: string;
+  onChain: boolean;
+  creMode: "real" | "mock" | "unknown";
 }
 
 export function useBackendHealth(): HealthStatus {
   const [status, setStatus] = useState<HealthStatus>({
     isOnline: null,
     service: "",
+    onChain: false,
+    creMode: "unknown",
   });
 
   useEffect(() => {
@@ -52,21 +56,23 @@ export function useBackendHealth(): HealthStatus {
       try {
         const res = await fetch(`${API_BASE}/health`);
         if (!res.ok) {
-          setStatus({ isOnline: false, service: "" });
+          setStatus({ isOnline: false, service: "", onChain: false, creMode: "unknown" });
           return;
         }
         const data = await res.json();
         setStatus({
           isOnline: data.status === "ok",
           service: data.service ?? "AEGISOE Backend",
+          onChain: data.onChain ?? false,
+          creMode: data.creMode ?? "unknown",
         });
       } catch {
-        setStatus({ isOnline: false, service: "" });
+        setStatus({ isOnline: false, service: "", onChain: false, creMode: "unknown" });
       }
     }
 
     check();
-    const interval = setInterval(check, 30000);
+    const interval = setInterval(check, 10000);
     return () => clearInterval(interval);
   }, []);
 

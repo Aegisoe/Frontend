@@ -18,6 +18,11 @@ export default function Dashboard() {
   const totalRotations = events.filter((e) => e.type === "rotation").length;
   const pendingCount = incidents.filter((i) => i.status === "detected" || i.status === "rotating").length;
 
+  // Build backend status note
+  const backendNote = health.isOnline
+    ? `CRE: ${health.creMode} \u00B7 Chain: ${health.onChain ? "active" : "off"}`
+    : "Unreachable";
+
   const stats = [
     {
       label: "Total Incidents",
@@ -47,8 +52,8 @@ export default function Dashboard() {
     {
       label: "Backend Status",
       value: health.isOnline === null ? "..." : health.isOnline ? "ONLINE" : "OFFLINE",
-      note: health.isOnline ? "Railway" : "Unreachable",
-      noteType: "normal" as const,
+      note: backendNote,
+      noteType: health.isOnline ? "up" as const : "warn" as const,
       icon: "\u2B21",
       iconBg: "bg-[rgba(59,130,246,0.1)]",
       valueStyle: health.isOnline
@@ -63,7 +68,10 @@ export default function Dashboard() {
       description="Real-time overview &middot; Chainlink CRE + Sepolia"
       actions={
         <>
-          <button className="inline-flex items-center gap-1.5 rounded-[7px] border border-[var(--border)] bg-transparent px-3.5 py-[7px] text-[13px] font-medium text-[var(--text2)] transition-all duration-100 hover:border-[var(--border2)] hover:bg-[var(--surface2)] hover:text-[var(--text)]">
+          <button
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center gap-1.5 rounded-[7px] border border-[var(--border)] bg-transparent px-3.5 py-[7px] text-[13px] font-medium text-[var(--text2)] transition-all duration-100 hover:border-[var(--border2)] hover:bg-[var(--surface2)] hover:text-[var(--text)]"
+          >
             &#8634; Refresh
           </button>
         </>
