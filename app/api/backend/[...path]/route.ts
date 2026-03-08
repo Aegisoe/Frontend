@@ -1,21 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "https://aegisoebe-production.up.railway.app";
+const PRIMARY_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL ?? "https://aegisoebe-production.up.railway.app";
+const FALLBACK_URL = process.env.NEXT_PUBLIC_BACKEND_URL_FALLBACK ?? "http://localhost:3000";
+
+async function tryFetch(url: string) {
+  const res = await fetch(url, {
+    headers: { "Content-Type": "application/json" },
+    next: { revalidate: 0 },
+  });
+  const data = await res.json();
+  return NextResponse.json(data, { status: res.status });
+}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  const target = `${BACKEND_URL}/${path.join("/")}`;
+  const suffix = path.join("/");
+
+  // Try primary first, fallback if it fails
+  try {
+    return await tryFetch(`${PRIMARY_URL}/${suffix}`);
+  } catch {
+    // Primary failed, try fallback
+  }
 
   try {
-    const res = await fetch(target, {
-      headers: { "Content-Type": "application/json" },
-      next: { revalidate: 0 },
-    });
-    const data = await res.json();
-    return NextResponse.json(data, { status: res.status });
+    return await tryFetch(`${FALLBACK_URL}/${suffix}`);
   } catch {
     return NextResponse.json({ error: "Backend unreachable" }, { status: 502 });
   }
