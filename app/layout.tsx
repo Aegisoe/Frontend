@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AEGISOE — Confidential Security Automation",
+  title: "AEGISOE",
   description: "Verifiable on-chain incident response for leaked secrets",
   icons: {
     icon: "/Logo_Aegisoe.svg",
